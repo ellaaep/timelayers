@@ -1,0 +1,11 @@
+<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Časovrstvy</title><link rel="icon" type="image/svg+xml" href="favicon.svg"><style>html,body{margin:0;height:100%;background:#f6f7fb;color:#171a23;font-family:system-ui,sans-serif}.loading{height:100%;display:grid;place-items:center}.loading b{font-size:20px}</style></head><body><div class="loading"><b>Načítám Časovrstvy…</b></div><!-- production:complete-history --><script>
+fetch('https://raw.githubusercontent.com/ellaaep/casovrstvy/eacb4831721371cdbe7fbd5aecdcddf70e60dc0b/index.html?production=8',{cache:'no-store'})
+.then(response=>{if(!response.ok)throw new Error('Načtení aplikace selhalo');return response.text()})
+.then(source=>{
+ const closing='</scr'+'ipt>';
+ source=source.replace('</head>','<link rel="icon" type="image/svg+xml" href="favicon.svg"><link rel="stylesheet" href="app.css?v=8"></head>');
+ source=source.replace('</body>','<script src="app.js?v=8">'+closing+'<script src="leaders.js?v=8">'+closing+'<script src="mobile-menu.js?v=8">'+closing+'<script src="authors.js?v=8">'+closing+'<script src="history.js?v=8">'+closing+'</body>');
+ document.open();document.write(source);document.close();
+})
+.catch(error=>{document.body.innerHTML='<div class="loading"><b>Aplikaci se nepodařilo načíst.</b></div>';console.error(error)});
+</script></body></html>
