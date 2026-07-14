@@ -28,7 +28,7 @@ const customWorks=()=>imported.filter(x=>x.target==='works').map(x=>({...x,kind:
 const customHistory=()=>imported.filter(x=>x.target==='history').map(x=>({...x,kind:'custom'}));
 const allPeople=()=>[...basePeople,...customPeople()];
 const allWorks=()=>[...baseWorks,...customWorks()];
-const allEvents=()=>[...baseEvents,...customHistory()];
+const allEvents=()=>baseEvents;
 const allPeriods=()=>basePeriods;
 const byPerson=()=>new Map(allPeople().map(x=>[x.id,x]));
 
@@ -107,7 +107,7 @@ const layerDefs=[
 const kinds={person:'Autor',work:'Literární dílo',period:'Historické období',custom:'Vlastní položka'};
 const kindOf=x=>x.customType?kinds.custom:x.kind==='person'?kinds.person:x.kind==='work'?kinds.work:x.kind==='period'?kinds.period:isRuler(x)?'Vládce nebo prezident':isTech(x)?'Vynález nebo objev':isCzech(x)?'České dějiny':isWar(x)?'Válka a světové dějiny':'Světové dějiny';
 const description=x=>x.summary||x.description||(x.kind==='person'?(allWorks().filter(w=>w.authorId===x.id).length?`Autor spojený s díly ${allWorks().filter(w=>w.authorId===x.id).slice(0,4).map(titleOf).join(', ')}.`:'Významná osobnost literárních dějin.'):x.kind==='work'&&byPerson().get(x.authorId)?`Literární dílo autora ${byPerson().get(x.authorId).name}.`:'Významná položka společné historické a kulturní časové osy.');
-const allItems=()=>[...allPeople(),...allWorks(),...allEvents(),...allPeriods()];
+const allItems=()=>[...allPeople(),...allWorks(),...allEvents(),...customHistory(),...allPeriods()];
 const findItem=(kind,id)=>{
   const source=kind==='person'?allPeople():kind==='work'?allWorks():kind==='period'?allPeriods():kind==='custom'?imported:allEvents();
   return source.find(x=>String(x.id)===String(id));
@@ -225,8 +225,8 @@ const render=()=>{
   periodStrip.innerHTML=periodMarkup(width);
   $('#headerFrom').value=Math.round(state.a);$('#headerTo').value=Math.round(state.b);
   const tracksToRender=[];
-  if(state.on.has('authors'))tracksToRender.push(trackMarkup('authors','Autoři','♙','#7357e8',allPeople(),width));
-  if(state.on.has('works'))tracksToRender.push(trackMarkup('works','Knihy a další díla','▤','#a14ee2',allWorks(),width));
+  if(state.on.has('authors'))tracksToRender.push(trackMarkup('authors','Autoři','♙','#7357e8',state.on.has('custom')?allPeople():basePeople,width));
+  if(state.on.has('works'))tracksToRender.push(trackMarkup('works','Knihy a další díla','▤','#a14ee2',state.on.has('custom')?allWorks():baseWorks,width));
   if(state.on.has('history')||state.on.has('rulers')){
     let history=allEvents().filter(x=>!isTech(x)&&!isMonument(x)&&((!isRuler(x)&&state.on.has('history'))||(isRuler(x)&&state.on.has('rulers'))));
     if(state.on.has('custom'))history=[...history,...customHistory()];
@@ -329,7 +329,7 @@ timeline.addEventListener('pointermove',event=>{
   const rect=timeline.getBoundingClientRect(),ratio=clamp((event.clientX-rect.left)/rect.width,0,1),year=state.a+(state.b-state.a)*ratio;
   state.cursor=year;$('#cursorReadout').textContent=formatYear(year);$('#cursorYear').textContent=formatYear(year);$('#cursorLine').style.left=`${ratio*100}%`;$('#cursorLine').classList.add('show');
   if(!state.drag)return;
-  let years=-(event.clientX-state.drag.x)/timeline.clientWidth*(state.drag.b-state.drag.a),a=state.drag.a+years,b=state.drag.b+years,span=b-a;if(a<MIN){a=MIN;b=a+span}if(b>MAX){b=MAX;a=b-span}state.a=a;state.b=b;requestAnimationFrame(render);
+  let years=-(event.clientX-state.drag.x)/timeline.clientWidth*(state.drag.b-state.a),a=state.drag.a+years,b=state.drag.b+years,span=b-a;if(a<MIN){a=MIN;b=a+span}if(b>MAX){b=MAX;a=b-span}state.a=a;state.b=b;requestAnimationFrame(render);
 });
 timeline.addEventListener('pointerleave',()=>{$('#cursorLine').classList.remove('show');$('#cursorReadout').textContent='—'});
 const endDrag=()=>{if(!state.drag)return;state.drag=null;timeline.classList.remove('dragging');persist()};timeline.addEventListener('pointerup',endDrag);timeline.addEventListener('pointercancel',endDrag);
